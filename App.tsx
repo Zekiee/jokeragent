@@ -4,7 +4,7 @@ import { generateGameWords } from './services/geminiService';
 import { Button } from './components/Button';
 import { RefreshCw, Users, EyeOff, Skull, Crown, AlertTriangle } from 'lucide-react';
 
-const APP_VERSION = 'v1.2.1';
+const APP_VERSION = 'v1.2.2';
 const MIN_PLAYERS = 3;
 const MAX_PLAYERS = 12;
 
