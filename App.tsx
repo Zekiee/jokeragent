@@ -4,7 +4,7 @@ import { generateGameWords } from './services/geminiService';
 import { Button } from './components/Button';
 import { RefreshCw, Users, EyeOff, Skull, Crown, AlertTriangle } from 'lucide-react';
 
-const APP_VERSION = 'v1.2.0';
+const APP_VERSION = 'v1.2.1';
 const MIN_PLAYERS = 3;
 const MAX_PLAYERS = 12;
 
@@ -170,7 +170,7 @@ const App: React.FC = () => {
             </label>
             <input
               type="text"
-              placeholder="例如：水果、明星、抽象概念..."
+              placeholder="例如：柯南、漫威、三国、水果..."
               value={settings.topic}
               onChange={(e) => setSettings(s => ({ ...s, topic: e.target.value }))}
               className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl focus:ring-2 focus:ring-purple-500 focus:outline-none transition-all text-white placeholder-gray-600"
