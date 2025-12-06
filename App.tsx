@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import { GameStage, Player, Role, GameSettings, WordPair } from './types';
 import { generateGameWords } from './services/geminiService';
 import { Button } from './components/Button';
-import { RefreshCw, Users, Eye, EyeOff, Skull, Crown, AlertTriangle } from 'lucide-react';
+import { RefreshCw, Users, EyeOff, Skull, Crown, AlertTriangle } from 'lucide-react';
 
+const APP_VERSION = 'v1.2.0';
 const MIN_PLAYERS = 3;
 const MAX_PLAYERS = 12;
 
@@ -21,7 +22,6 @@ const App: React.FC = () => {
   const [winner, setWinner] = useState<Role | null>(null);
   const [error, setError] = useState<string | null>(null);
   
-  // 新增：用于控制确认弹窗的状态
   const [confirmKillId, setConfirmKillId] = useState<number | null>(null);
 
   // -- LOGIC: Setup & Start --
@@ -35,6 +35,7 @@ const App: React.FC = () => {
       initializePlayers(generatedWords);
       setStage(GameStage.REVEAL);
     } catch (e) {
+      console.error(e);
       setError("生成词语失败，请重试");
       setStage(GameStage.SETUP);
     }
@@ -115,8 +116,8 @@ const App: React.FC = () => {
   // -- RENDERING --
 
   const renderSetup = () => (
-    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8">
-      <div className="w-full max-w-lg space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8 relative">
+      <div className="w-full max-w-lg space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-8">
         <div className="text-center space-y-2">
           <h1 className="text-4xl md:text-5xl font-black bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-400">
             谁是卧底
@@ -191,6 +192,10 @@ const App: React.FC = () => {
             </span>
           ) : "开始游戏"}
         </Button>
+      </div>
+
+      <div className="absolute bottom-4 text-xs font-mono text-gray-600 select-none">
+        {APP_VERSION}
       </div>
     </div>
   );

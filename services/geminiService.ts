@@ -1,8 +1,6 @@
 import { GoogleGenAI, Type, Schema } from "@google/genai";
 import { WordPair } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 const wordPairSchema: Schema = {
   type: Type.OBJECT,
   properties: {
@@ -20,6 +18,10 @@ const wordPairSchema: Schema = {
 
 export const generateGameWords = async (topic?: string): Promise<WordPair> => {
   try {
+    // Initialize inside the function to avoid top-level await/init issues
+    // and ensure process.env is ready.
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
     const prompt = topic 
       ? `Generate a pair of words for the game 'Who is Undercover' (谁是卧底) based on the topic: "${topic}". Language: Chinese.`
       : `Generate a pair of words for the game 'Who is Undercover' (谁是卧底). The words should be common nouns, idioms, or famous people that are similar but distinguishable. Make it fun and moderately challenging. Language: Chinese.`;
