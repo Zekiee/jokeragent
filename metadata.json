@@ -1,0 +1,5 @@
+{
+  "name": "谁是卧底 AI版 (Who is the Spy)",
+  "description": "一个由 Google Gemini 驱动的现代化“谁是卧底”聚会游戏。AI 自动出题，支持多人传阅模式，自动判定胜负。",
+  "requestFramePermissions": []
+}
