@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { GameStage, Player, Role, GameSettings, WordPair } from './types';
 import { generateGameWords } from './services/geminiService';
 import { Button } from './components/Button';
-import { RefreshCw, Users, EyeOff, Skull, Crown, AlertTriangle } from 'lucide-react';
+import { RefreshCw, Users, EyeOff, Skull, Crown, AlertTriangle, Key } from 'lucide-react';
 
 const APP_VERSION = 'v1.2.2';
 const MIN_PLAYERS = 3;
 const MAX_PLAYERS = 12;
 
 const App: React.FC = () => {
+  const [hasApiKey, setHasApiKey] = useState<boolean>(false);
   const [stage, setStage] = useState<GameStage>(GameStage.SETUP);
   const [settings, setSettings] = useState<GameSettings>({
     totalPlayers: 6,
@@ -24,6 +25,37 @@ const App: React.FC = () => {
   
   const [confirmKillId, setConfirmKillId] = useState<number | null>(null);
 
+  // -- LOGIC: API Key Check --
+  useEffect(() => {
+    checkApiKey();
+  }, []);
+
+  const checkApiKey = async () => {
+    if (window.aistudio) {
+      const hasKey = await window.aistudio.hasSelectedApiKey();
+      setHasApiKey(hasKey);
+    } else {
+      // Fallback for local dev or other environments where process.env might be set manually
+      // We assume true if window.aistudio is missing, but generateGameWords will fail if env is missing.
+      // However, to fix the specific error "API Key must be set", usually strictly for AI Studio env:
+      setHasApiKey(true); 
+    }
+  };
+
+  const handleSelectKey = async () => {
+    if (window.aistudio) {
+      try {
+        await window.aistudio.openSelectKey();
+        // Assume success after await, update state
+        setHasApiKey(true);
+        setError(null);
+      } catch (e) {
+        console.error("Key selection failed", e);
+        setError("API Key 选择失败，请重试");
+      }
+    }
+  };
+
   // -- LOGIC: Setup & Start --
 
   const handleStartGame = async () => {
@@ -34,10 +66,17 @@ const App: React.FC = () => {
       setWords(generatedWords);
       initializePlayers(generatedWords);
       setStage(GameStage.REVEAL);
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      setError("生成词语失败，请重试");
       setStage(GameStage.SETUP);
+      
+      // Check if error is related to missing API key
+      if (e.message?.includes("API Key") || e.toString().includes("API Key")) {
+         setHasApiKey(false); // Force re-selection
+         setError("API Key 无效或未设置，请重新选择");
+      } else {
+         setError("生成词语失败，请稍后重试");
+      }
     }
   };
 
@@ -114,6 +153,53 @@ const App: React.FC = () => {
   };
 
   // -- RENDERING --
+
+  const renderApiKeySelection = () => (
+    <div className="min-h-screen flex items-center justify-center p-4 relative">
+       <div className="max-w-md w-full text-center space-y-8 animate-in fade-in zoom-in duration-500">
+          <div>
+            <h1 className="text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-400 mb-2">
+              谁是卧底
+            </h1>
+            <p className="text-gray-400">AI Party Game</p>
+          </div>
+
+          <div className="bg-gray-800/50 p-8 rounded-2xl border border-gray-700 backdrop-blur-sm shadow-xl space-y-6">
+            <div className="w-16 h-16 bg-gray-700/50 rounded-full flex items-center justify-center mx-auto ring-1 ring-gray-600">
+              <Key className="text-purple-400" size={32} />
+            </div>
+            
+            <div className="space-y-2">
+              <h3 className="text-xl font-bold text-gray-200">需要 API Key</h3>
+              <p className="text-sm text-gray-400 leading-relaxed">
+                本游戏使用 Google Gemini 模型生成题目。<br/>请选择一个有效的 API Key 以继续。
+              </p>
+            </div>
+
+            <Button onClick={handleSelectKey} fullWidth className="relative overflow-hidden group">
+               <span className="relative z-10 flex items-center justify-center gap-2">
+                 连接 Google AI <span className="group-hover:translate-x-1 transition-transform">→</span>
+               </span>
+            </Button>
+            
+            <div className="text-xs text-gray-600 pt-2">
+              <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noreferrer" className="underline hover:text-gray-400">
+                查看 Billing 文档
+              </a>
+            </div>
+          </div>
+          
+          {error && (
+            <div className="p-3 bg-red-900/30 border border-red-800 rounded-lg text-red-200 text-sm flex items-center justify-center gap-2">
+               <AlertTriangle size={14} /> {error}
+            </div>
+          )}
+       </div>
+       <div className="absolute bottom-4 text-xs font-mono text-gray-600 select-none">
+        {APP_VERSION}
+      </div>
+    </div>
+  );
 
   const renderSetup = () => (
     <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8 relative">
@@ -402,6 +488,15 @@ const App: React.FC = () => {
       </div>
     </div>
   );
+
+  // If we don't have an API key and we are in an environment that supports selecting one (window.aistudio), show the selector
+  if (!hasApiKey && window.aistudio) {
+    return (
+      <div className="min-h-screen bg-[#111827] text-white selection:bg-purple-500/30 selection:text-purple-200">
+        {renderApiKeySelection()}
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#111827] text-white selection:bg-purple-500/30 selection:text-purple-200">
